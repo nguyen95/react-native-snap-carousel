@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Animated, Easing, FlatList, I18nManager, Platform, ScrollView, View, ViewPropTypes } from 'react-native';
+import { Animated, Easing, FlatList, I18nManager, Platform, ScrollView, View, ViewPropTypes, ViewStyle } from 'react-native';
 import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import {
@@ -43,8 +43,8 @@ export default class Carousel extends Component {
         autoplayDelay: PropTypes.number,
         autoplayInterval: PropTypes.number,
         callbackOffsetMargin: PropTypes.number,
-        containerCustomStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
-        contentContainerCustomStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
+        containerCustomStyle: ViewPropTypes ? ViewPropTypes.style : ViewStyle,
+        contentContainerCustomStyle: ViewPropTypes ? ViewPropTypes.style : ViewStyle,
         enableMomentum: PropTypes.bool,
         enableSnap: PropTypes.bool,
         firstItem: PropTypes.number,
@@ -61,7 +61,7 @@ export default class Carousel extends Component {
         scrollEnabled: PropTypes.bool,
         scrollInterpolator: PropTypes.func,
         slideInterpolatedStyle: PropTypes.func,
-        slideStyle: ViewPropTypes ? ViewPropTypes.style : View.propTypes.style,
+        slideStyle: ViewPropTypes ? ViewPropTypes.style : ViewStyle,
         shouldOptimizeUpdates: PropTypes.bool,
         swipeThreshold: PropTypes.number,
         useScrollView: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
@@ -481,6 +481,12 @@ export default class Carousel extends Component {
     }
 
     _getWrappedRef () {
+        if (this._carouselRef && (
+            (this._needsScrollView() && this._carouselRef.scrollTo) ||
+            (!this._needsScrollView() && this._carouselRef.scrollToOffset)
+        )) {
+            return this._carouselRef;
+        }
         // https://github.com/facebook/react-native/issues/10635
         // https://stackoverflow.com/a/48786374/8412141
         return this._carouselRef && this._carouselRef.getNode && this._carouselRef.getNode();
@@ -733,7 +739,7 @@ export default class Carousel extends Component {
         this._snapToItem(repositionTo, false, false, false, false);
     }
 
-    _scrollTo (offset, animated = true,index = -1) {
+    _scrollTo (offset, animated = true) {
         const { vertical } = this.props;
         const wrappedRef = this._getWrappedRef();
 
@@ -755,11 +761,7 @@ export default class Carousel extends Component {
         if (this._needsScrollView()) {
             wrappedRef.scrollTo(options);
         } else {
-            if(index >= 0){
-                wrappedRef.scrollToIndex({viewPosition:0.5,index:index});
-            }else{
-                wrappedRef.scrollToOffset(options);
-            }
+            wrappedRef.scrollToOffset(options);
         }
     }
 
